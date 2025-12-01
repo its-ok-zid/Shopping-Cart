@@ -1,5 +1,6 @@
 package com.cts.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -25,6 +26,7 @@ public class User {
 
     // password: DON'T enforce unique
     @NotBlank
+    @JsonIgnore
     @Column(name = "password", nullable = false, length = 255)   // bcrypt needs ~60 chars
     private String password;
 
