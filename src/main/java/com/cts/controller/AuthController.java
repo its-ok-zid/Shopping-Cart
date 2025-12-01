@@ -68,8 +68,9 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> signin(@Valid @RequestBody AuthRequest request, HttpServletResponse response) {
+        Authentication authentication;
         try {
-            Authentication authentication = authenticationManager.authenticate(
+            authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
         } catch (AuthenticationException ex) {
@@ -79,7 +80,7 @@ public class AuthController {
         var user = userRepository.findByUsername(request.getUsername()).orElseThrow();
 
         var roles = user.getRoles().stream().map(Enum::name).collect(Collectors.toList());
-        String token = jwtUtil.generateToken(user.getUsername(), roles);
+        String token = jwtUtil.generateToken(authentication);
 
         ResponseCookie cookie = ResponseCookie.from(jwtCookieName, token)
                 .httpOnly(true)

@@ -1,9 +1,12 @@
 package com.cts.security;
 
+import com.cts.model.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -33,10 +36,10 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(org.springframework.security.core.Authentication authentication) {
-        String username = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
+    public String generateToken(Authentication authentication) {
+        String username = ((User) authentication.getPrincipal()).getUsername();
         List<String> roles = authentication.getAuthorities().stream()
-                .map(a -> a.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
         Date now = new Date();
