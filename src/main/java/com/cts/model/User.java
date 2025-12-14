@@ -4,33 +4,38 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "users")
+@Table(name = "app_user_detail")
 @Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // username: plain string (no email constraint)
     @NotBlank
     @Column(name = "username", unique = true, nullable = false, length = 100)
     private String username;
 
-    // password: DON'T enforce unique
     @NotBlank
     @JsonIgnore
-    @Column(name = "password", nullable = false, length = 255)   // bcrypt needs ~60 chars
+    @Column(name = "password", nullable = false, length = 255)
     private String password;
 
-    // email: validated
     @Email
     @Column(name = "email", unique = true, length = 254)
     private String email;
@@ -40,4 +45,29 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Set<Role> roles;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return false;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return false;
+    }
 }

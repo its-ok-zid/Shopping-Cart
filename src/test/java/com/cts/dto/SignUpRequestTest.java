@@ -19,7 +19,7 @@
 //        String password = "zid1234@";
 //
 //        // Act
-//        SignUpRequest signUpRequest = new SignUpRequest(userId,username, password);
+//        SignUpRequestDTO signUpRequest = new SignUpRequestDTO(userId,username, password);
 //
 //        // Assert
 //        assertNotNull(signUpRequest);
@@ -32,7 +32,7 @@
 //        // Arrange
 //        String newUsername = "zidan@gmail.com";
 //        String newPassword = "zid1234@";
-//        SignUpRequest signUpRequest = new SignUpRequest();
+//        SignUpRequestDTO signUpRequest = new SignUpRequestDTO();
 //
 //        // Act
 //        signUpRequest.setUsername(newUsername);
@@ -46,7 +46,7 @@
 //    @Test
 //    public void testEmptyConstructor() {
 //        // Arrange & Act
-//        SignUpRequest signUpRequest = new SignUpRequest();
+//        SignUpRequestDTO signUpRequest = new SignUpRequestDTO();
 //
 //        // Assert
 //        assertNotNull(signUpRequest);

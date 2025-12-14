@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: shopping-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: shopping_cart
+      POSTGRES_USER: shopping_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  mongo:
+    image: mongo:7
+    container_name: shopping-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: shopping_cart_files
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  app:
+    build: .
+    # or use image: your-dockerhub-username/shopping-cart:latest
+    container_name: shopping-cart-app
+    depends_on:
+      - postgres
+      - mongo
+    restart: unless-stopped
+    ports:
+      - "9081:9081"
+    environment:
+
+      # ---------- Postgres ----------
+      DATABASE_URL: jdbc:postgresql://postgres:5432/shopping_cart
+      DATABASE_USERNAME: shopping_user
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+
+      # ---------- Mongo ----------
+      MONGODB_URI: mongodb://mongo:27017/shopping_cart
+      MONGODB_DATABASE: shopping_cart
+
+      JWT_SECRET: ${JWT_SECRET}
+
+      # optional extras
+      JWT_EXPIRATION_MS: 3600000
+      JWT_COOKIE_NAME: JWT_TOKEN
+      JWT_AUTH_HEADER: Authorization
+      APP_THUMBNAIL_GRIDFS_BUCKET: itemThumbnails
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:3000
+
+volumes:
+  postgres_data:
+  mongo_data:

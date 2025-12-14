@@ -11,7 +11,7 @@
 //import org.springframework.http.HttpStatus;
 //import org.springframework.http.ResponseEntity;
 //
-//import com.cts.dto.SignUpRequest;
+//import com.cts.dto.SignUpRequestDTO;
 //import com.cts.exception.LoginException;
 //
 //public class UserLoginControllerTest {
@@ -32,7 +32,7 @@
 //        // Arrange
 //        String username = "testUser";
 //        String password = "password";
-//        SignUpRequest signUpRequest = new SignUpRequest(1,username, password);
+//        SignUpRequestDTO signUpRequest = new SignUpRequestDTO(1,username, password);
 //        UserDetails userDetails = new UserDetails();
 //        userDetails.setUsername(username);
 //        userDetails.setPassword(password);
@@ -49,7 +49,7 @@
 //    @Test
 //    void testLogin_InvalidCredentials() {
 //        // Arrange
-//        SignUpRequest signUpRequest = new SignUpRequest(0,null, null);
+//        SignUpRequestDTO signUpRequest = new SignUpRequestDTO(0,null, null);
 //
 //        // Act and Assert
 //        LoginException exception = org.junit.jupiter.api.Assertions.assertThrows(LoginException.class,
