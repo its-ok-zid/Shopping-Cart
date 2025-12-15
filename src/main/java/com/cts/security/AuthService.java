@@ -56,7 +56,7 @@ public class AuthService {
                 .username(signUpRequest.getUsername())
                 .password(passwordEncoder.encode(signUpRequest.getPassword()))
                 .email(signUpRequest.getEmail())
-                .roles(Set.of(Role.USER))
+                .roles(Set.of(Role.ROLE_USER))
                 .build();
 
         userRepository.save(user);

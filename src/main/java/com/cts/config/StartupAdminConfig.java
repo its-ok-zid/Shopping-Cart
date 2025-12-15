@@ -22,7 +22,7 @@ public class StartupAdminConfig {
                 u.setUsername(adminUsername);
                 u.setEmail("admin@example.com");
                 u.setPassword(encoder.encode("Admin@123"));
-                u.setRoles(Set.of(Role.ADMIN, Role.USER));
+                u.setRoles(Set.of(Role.ROLE_ADMIN, Role.ROLE_USER));
                 repo.save(u);
             }
         };
