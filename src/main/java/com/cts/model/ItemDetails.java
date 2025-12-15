@@ -14,31 +14,31 @@ import java.util.Objects;
 @Entity
 @NoArgsConstructor
 @Data
-@Table(name="item")
+@Table(name = "item")
 public class ItemDetails {
 
-	@Id
-	@Column(name="item_id")
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long id;
+    @Id
+    @Column(name = "item_id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
 
-	@Column(name="item_name")
-	private String name;
+    @Column(name = "item_name")
+    private String name;
 
-	@Column(name="item_description")
-	private String itemDescription;
+    @Column(name = "item_description")
+    private String itemDescription;
 
-	@Column(name="item_quantity")
-	private int  itemQuantity;
+    @Column(name = "item_quantity")
+    private int itemQuantity;
 
-	@Column(name="item_cost")
-	private float itemCost;
+    @Column(name = "item_cost")
+    private float itemCost;
 
-	@Column(name="mfr_number")
-	private String mfrNo;
+    @Column(name = "mfr_number")
+    private String mfrNo;
 
-	@Column(name="item_stock")
-	private int stock;
+    @Column(name = "item_stock")
+    private int stock;
 
     @Column(name = "thumbnail_id")
     private String thumbnailId;
@@ -47,7 +47,9 @@ public class ItemDetails {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         ItemDetails that = (ItemDetails) o;
-        return id == that.id && itemQuantity == that.itemQuantity && Float.compare(itemCost, that.itemCost) == 0 && stock == that.stock && Objects.equals(name, that.name) && Objects.equals(itemDescription, that.itemDescription) && Objects.equals(mfrNo, that.mfrNo) && Objects.equals(thumbnailId, that.thumbnailId);
+        return id == that.id && itemQuantity == that.itemQuantity && Float.compare(itemCost, that.itemCost) == 0
+                && stock == that.stock && Objects.equals(name, that.name) && Objects.equals(itemDescription, that.itemDescription)
+                && Objects.equals(mfrNo, that.mfrNo) && Objects.equals(thumbnailId, that.thumbnailId);
     }
 
     @Override

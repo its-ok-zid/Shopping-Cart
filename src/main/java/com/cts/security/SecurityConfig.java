@@ -34,24 +34,34 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(Customizer.withDefaults()) // enable CORS using CorsConfigurationSource bean below
-                .csrf(AbstractHttpConfigurer::disable) // if you want CSRF protection later, enable and add token flow
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
-                        // public
+
+                        // 🔓 PUBLIC / USER ACCESS
+                        .requestMatchers(HttpMethod.GET, "/api/items/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/thumbnails/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // admin endpoints (you can adjust)
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/thumbnails/**").hasRole("ADMIN")
+
+                        // 🛒 USER ONLY
+                        .requestMatchers("/api/usercart/**").hasRole("USER")
+
+                        // 🔒 ADMIN ONLY
                         .requestMatchers(HttpMethod.POST, "/api/items/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/items/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/items/**").hasRole("ADMIN")
-                        // cart/checkout require authentication
-                        .requestMatchers("/api/usercart/**", "/api/checkout/**", "/api/items/**").authenticated()
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // ❌ EVERYTHING ELSE
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

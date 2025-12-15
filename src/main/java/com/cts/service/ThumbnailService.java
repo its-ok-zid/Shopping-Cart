@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface ThumbnailService {
 
      public String store(MultipartFile file) throws IOException;
+
      public Optional<GridFsResource> loadAsResource(String fileId);
+
      public void delete(String fileId);
 }

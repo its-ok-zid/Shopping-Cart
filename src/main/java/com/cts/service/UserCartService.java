@@ -1,10 +1,10 @@
 package com.cts.service;
 
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-
 import com.cts.model.UserCartDetails;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+
+import java.util.List;
 
 public interface UserCartService {
 
@@ -35,6 +35,5 @@ public interface UserCartService {
     void removeFromCart(long userId, int cartItemId);
 
 
-
-
+    long getUserId(Authentication auth);
 }

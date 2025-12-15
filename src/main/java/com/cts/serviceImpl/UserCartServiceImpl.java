@@ -1,23 +1,22 @@
 package com.cts.serviceImpl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import com.cts.model.User;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-
 import com.cts.model.ItemDetails;
+import com.cts.model.User;
 import com.cts.model.UserCartDetails;
 import com.cts.repository.ItemRepository;
 import com.cts.repository.UserCartRepository;
 import com.cts.repository.UserRepository;
 import com.cts.service.UserCartService;
-
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -126,5 +125,27 @@ public class UserCartServiceImpl implements UserCartService {
             throw new IllegalArgumentException("Cart item not found for this user or does not belong to user");
         }
         userCartRepository.delete(optional.get());
+    }
+
+
+    public long getUserId(Authentication auth) {
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new IllegalStateException("User is not authenticated");
+        }
+
+        Object principal = auth.getPrincipal();
+
+        if (principal instanceof User) {
+            Long id = ((User) principal).getId();
+            if (id != null) {
+                return id;
+            }
+        }
+
+        // Fallback to lookup by username from repository (handles Spring Security's User principal)
+        String username = auth.getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalStateException("User not found: " + username))
+                .getId();
     }
 }

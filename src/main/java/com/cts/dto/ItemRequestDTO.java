@@ -33,9 +33,4 @@ public class ItemRequestDTO {
     @Min(value = 0, message = "stock must be >= 0")
     private int stock;
 
-    /**
-     * Optional: If you already uploaded a thumbnail to GridFS, you can pass the fileId here.
-     * Otherwise you can upload the thumbnail later via POST /api/thumbnails/{itemId}
-     */
-    private String thumbnailId;
 }

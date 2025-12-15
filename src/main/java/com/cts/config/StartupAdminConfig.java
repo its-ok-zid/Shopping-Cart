@@ -21,10 +21,9 @@ public class StartupAdminConfig {
                 User u = new User();
                 u.setUsername(adminUsername);
                 u.setEmail("admin@example.com");
-                u.setPassword(encoder.encode("Admin@123")); // change after first login
-                u.setRoles(Set.of(Role.ROLE_ADMIN, Role.ROLE_USER));
+                u.setPassword(encoder.encode("Admin@123"));
+                u.setRoles(Set.of(Role.ADMIN, Role.USER));
                 repo.save(u);
-                System.out.println("Created admin user: admin / Admin@123");
             }
         };
     }
