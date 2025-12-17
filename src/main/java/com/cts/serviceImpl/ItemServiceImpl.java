@@ -11,7 +11,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,24 +23,7 @@ public class ItemServiceImpl implements ItemService {
         this.itemRepository = itemRepository;
         this.thumbnailService = thumbnailService;
     }
-
-    @Override
-    public List<ItemResponseDTO> getAllItems() {
-        List<ItemResponseDTO> items = new ArrayList<>();
-        List<ItemDetails> itemDetailsList = itemRepository.findAll();
-        for (ItemDetails item : itemDetailsList) {
-            items.add(new ItemResponseDTO(
-                    item.getId(),
-                    item.getName(),
-                    item.getItemDescription(),
-                    item.getItemCost(),
-                    item.getMfrNo(),
-                    item.getStock(),
-                    item.getThumbnailId()
-            ));
-        }
-        return items;
-    }
+    
 
     @Override
     public ItemDetails getItemByName(String name) {
@@ -95,6 +77,22 @@ public class ItemServiceImpl implements ItemService {
             throw new ItemCreationException("Failed to create item with thumbnail", ex);
         }
     }
+
+    @Override
+    public List<ItemResponseDTO> getAllItems() {
+        return itemRepository.findAll().stream()
+                .map(item -> new ItemResponseDTO(
+                        item.getId(),
+                        item.getName(),
+                        item.getItemDescription(),
+                        item.getItemCost(),
+                        item.getMfrNo(),
+                        item.getStock(),
+                        item.getThumbnailId()
+                ))
+                .toList();
+    }
+
 
     @Override
     @Transactional

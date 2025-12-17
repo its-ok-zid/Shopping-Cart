@@ -37,43 +37,12 @@ public class ItemController {
         this.itemService = itemService;
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<ItemResponseDTO>>> getAllItems() {
-
-        List<ItemResponseDTO> items = itemService.getAllItems();
-
-        return ResponseEntity.ok(
-                ApiResponse.<List<ItemResponseDTO>>builder()
-                        .success(true)
-                        .message("Items fetched successfully")
-                        .data(items)
-                        .build()
-        );
-    }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<ItemDetails> getItem(@PathVariable Long id) {
         return itemRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<ItemResponseDTO>> createItem(
-            @RequestPart("item") @Valid ItemRequestDTO itemRequest,
-            @RequestPart("thumbnail") MultipartFile thumbnail) {
-
-        ItemResponseDTO response = itemService.createItem(itemRequest, thumbnail);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.<ItemResponseDTO>builder()
-                        .success(true)
-                        .message("Item created successfully")
-                        .data(response)
-                        .build());
     }
 
 
@@ -89,5 +58,54 @@ public class ItemController {
         e.setStock(req.getStock());
         itemRepository.save(e);
         return ResponseEntity.ok(new ItemResponseDTO(e.getId(), e.getName(), e.getItemDescription(), e.getItemCost(), e.getMfrNo(), e.getStock(), e.getThumbnailId()));
+    }
+
+    // ✅ PUBLIC
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ItemResponseDTO>>> getAllItems() {
+        return ResponseEntity.ok(
+                ApiResponse.<List<ItemResponseDTO>>builder()
+                        .success(true)
+                        .message("Items fetched successfully")
+                        .data(itemService.getAllItems())
+                        .build()
+        );
+    }
+
+
+    // 🔒 ADMIN
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ItemResponseDTO>> createItem(
+            @RequestPart("item") @Valid ItemRequestDTO item,
+            @RequestPart("thumbnail") MultipartFile thumbnail) {
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.<ItemResponseDTO>builder()
+                        .success(true)
+                        .message("Item created")
+                        .data(itemService.createItem(item, thumbnail))
+                        .build());
+    }
+
+    // 🔒 ADMIN — FIXED PUT
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping(
+            value = "/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<ApiResponse<ItemResponseDTO>> updateItem(
+            @PathVariable Long id,
+            @RequestPart("item") @Valid ItemRequestDTO item,
+            @RequestPart(value = "thumbnail", required = false)
+            MultipartFile thumbnail) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<ItemResponseDTO>builder()
+                        .success(true)
+                        .message("Item updated")
+                        .data(itemService.updateItem(id, item, thumbnail))
+                        .build()
+        );
     }
 }

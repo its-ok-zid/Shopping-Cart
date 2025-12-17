@@ -28,9 +28,6 @@ public class ItemDetails {
     @Column(name = "item_description")
     private String itemDescription;
 
-    @Column(name = "item_quantity")
-    private int itemQuantity;
-
     @Column(name = "item_cost")
     private float itemCost;
 
@@ -47,13 +44,11 @@ public class ItemDetails {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         ItemDetails that = (ItemDetails) o;
-        return id == that.id && itemQuantity == that.itemQuantity && Float.compare(itemCost, that.itemCost) == 0
-                && stock == that.stock && Objects.equals(name, that.name) && Objects.equals(itemDescription, that.itemDescription)
-                && Objects.equals(mfrNo, that.mfrNo) && Objects.equals(thumbnailId, that.thumbnailId);
+        return id == that.id && Float.compare(itemCost, that.itemCost) == 0 && stock == that.stock && Objects.equals(name, that.name) && Objects.equals(itemDescription, that.itemDescription) && Objects.equals(mfrNo, that.mfrNo) && Objects.equals(thumbnailId, that.thumbnailId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, itemDescription, itemQuantity, itemCost, mfrNo, stock, thumbnailId);
+        return Objects.hash(id, name, itemDescription, itemCost, mfrNo, stock, thumbnailId);
     }
 }
