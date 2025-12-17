@@ -11,22 +11,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.Map;
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<?> handleDataIntegrity(DataIntegrityViolationException ex) {
-        ex.getMostSpecificCause();
-        Map<String, String> body = Map.of("error", "Data integrity violation", "message", ex.getMostSpecificCause().getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-    }
-
-    @ExceptionHandler(JwtException.class)
-    public ResponseEntity<?> handleJwtException(JwtException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid or expired token"));
-    }
 
 
     // ================= ITEM =================
@@ -104,18 +90,6 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgument(
-            IllegalArgumentException ex) {
-
-        return ResponseEntity.badRequest().body(
-                ErrorResponse.builder()
-                        .success(false)
-                        .errorCode("BAD_REQUEST")
-                        .message(ex.getMessage())
-                        .build()
-        );
-    }
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(
@@ -129,5 +103,37 @@ public class GlobalExceptionHandler {
                         .build()
         );
     }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ErrorResponse> handleJwt(JwtException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.builder()
+                        .success(false)
+                        .errorCode("INVALID_JWT")
+                        .message("Invalid or expired token")
+                        .build());
+    }
+
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.builder()
+                        .success(false)
+                        .errorCode("DATA_INTEGRITY_VIOLATION")
+                        .message(ex.getMostSpecificCause().getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.builder()
+                        .success(false)
+                        .errorCode("BAD_REQUEST")
+                        .message(ex.getMessage())
+                        .build());
+    }
+
 
 }

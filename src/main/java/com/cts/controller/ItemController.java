@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,21 +45,6 @@ public class ItemController {
     }
 
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ItemResponseDTO> updateItem(@PathVariable Long id, @RequestBody ItemRequestDTO req) {
-        var opt = itemRepository.findById(id);
-        if (opt.isEmpty()) return ResponseEntity.notFound().build();
-        ItemDetails e = opt.get();
-        e.setName(req.getName());
-        e.setItemDescription(req.getDescription());
-        e.setItemCost(req.getCost());
-        e.setMfrNo(req.getMfrNo());
-        e.setStock(req.getStock());
-        itemRepository.save(e);
-        return ResponseEntity.ok(new ItemResponseDTO(e.getId(), e.getName(), e.getItemDescription(), e.getItemCost(), e.getMfrNo(), e.getStock(), e.getThumbnailId()));
-    }
-
-    // ✅ PUBLIC
     @GetMapping
     public ResponseEntity<ApiResponse<List<ItemResponseDTO>>> getAllItems() {
         return ResponseEntity.ok(
@@ -73,7 +57,6 @@ public class ItemController {
     }
 
 
-    // 🔒 ADMIN
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ItemResponseDTO>> createItem(
@@ -83,17 +66,13 @@ public class ItemController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.<ItemResponseDTO>builder()
                         .success(true)
-                        .message("Item created")
+                        .message("Item created successfully")
                         .data(itemService.createItem(item, thumbnail))
                         .build());
     }
 
-    // 🔒 ADMIN — FIXED PUT
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping(
-            value = "/{id}",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ItemResponseDTO>> updateItem(
             @PathVariable Long id,
             @RequestPart("item") @Valid ItemRequestDTO item,
@@ -103,9 +82,8 @@ public class ItemController {
         return ResponseEntity.ok(
                 ApiResponse.<ItemResponseDTO>builder()
                         .success(true)
-                        .message("Item updated")
+                        .message("Item updated successfully")
                         .data(itemService.updateItem(id, item, thumbnail))
-                        .build()
-        );
+                        .build());
     }
 }
