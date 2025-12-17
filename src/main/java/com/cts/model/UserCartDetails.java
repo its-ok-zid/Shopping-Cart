@@ -34,7 +34,7 @@ public class UserCartDetails {
     @Column(name = "Item_Quantity")
     private int itemQuantity;
 
-    @Column(name="Item_Description")
+    @Column(name = "Item_Description")
     private String itemDescription;
 
     @Column(name = "Item_Cost")

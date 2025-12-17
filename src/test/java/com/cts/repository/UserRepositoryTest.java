@@ -1,7 +1,4 @@
 package com.cts.repository;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 

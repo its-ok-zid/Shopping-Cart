@@ -5,9 +5,9 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
-import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,7 +60,7 @@ public class ThumbnailServiceImpl implements ThumbnailService {
         if (fileId == null || fileId.isBlank()) return;
         try {
             gridFsTemplate.delete(Query.query(
-                   Criteria.where("_id").is(new ObjectId(fileId))
+                    Criteria.where("_id").is(new ObjectId(fileId))
             ));
         } catch (IllegalArgumentException e) {
             // invalid id, ignore or log

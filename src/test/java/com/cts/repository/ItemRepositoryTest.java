@@ -1,52 +1,51 @@
 package com.cts.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
-
+import com.cts.model.ItemDetails;
+import com.cts.serviceImpl.ItemServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.cts.model.ItemDetails;
-import com.cts.serviceImpl.ItemServiceImpl;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ItemRepositoryTest {
 
-	@Mock
-	private ItemRepository itemRepositoryMock;
+    @Mock
+    private ItemRepository itemRepositoryMock;
 
-	@InjectMocks
-	private ItemServiceImpl itemService;
+    @InjectMocks
+    private ItemServiceImpl itemService;
 
-	@Test
-	public void testfindItemByName_ItemExists() {
-		
-		// Arrange
-		String sku = "testSKU";
-		ItemDetails item = new ItemDetails();
-		item.setName(sku);
-		when(itemRepositoryMock.findItemByName(sku)).thenReturn(item);
+    @Test
+    public void testfindItemByName_ItemExists() {
 
-		// Act
-		ItemDetails result = itemService.getItemByName(sku);
+        // Arrange
+        String sku = "testSKU";
+        ItemDetails item = new ItemDetails();
+        item.setName(sku);
+        when(itemRepositoryMock.findItemByName(sku)).thenReturn(item);
 
-		// Assert
-		assertEquals(sku, result.getName());
-	}
+        // Act
+        ItemDetails result = itemService.getItemByName(sku);
 
-	@Test
-	public void testfindItemByName_ItemDoesNotExist() {
-		// Arrange
-		String sku = "nonExistingSKU";
-		when(itemRepositoryMock.findItemByName(sku)).thenReturn(null);
+        // Assert
+        assertEquals(sku, result.getName());
+    }
 
-		// Act
-		ItemDetails result = itemService.getItemByName(sku);
+    @Test
+    public void testfindItemByName_ItemDoesNotExist() {
+        // Arrange
+        String sku = "nonExistingSKU";
+        when(itemRepositoryMock.findItemByName(sku)).thenReturn(null);
 
-		// Assert
-		assertEquals(null, result);
-	}
+        // Act
+        ItemDetails result = itemService.getItemByName(sku);
+
+        // Assert
+        assertEquals(null, result);
+    }
 }

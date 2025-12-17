@@ -9,8 +9,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 public class ShoppingCartApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ShoppingCartApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ShoppingCartApplication.class, args);
+    }
 
 }

@@ -7,24 +7,24 @@
 //
 //public class UserCartDetailsTest {
 //
-////    @Test
-////    public void testConstructorAndGetters() {
-////        // Arrange
-////        UserDetails userDetails = new UserDetails();
-////        userDetails.setUsername("testUser");
-////        userDetails.setPassword("password");
-////
-////        // Act
-////        UserCartDetails userCartDetails = new UserCartDetails();
-////
-////        // Assert
-////        assertEquals(0, userCartDetails.getCartItemId());
-////        assertEquals(userDetails, userCartDetails.getUserDetails());
-////        assertEquals(2, userCartDetails.getItemQuantity());
-////        assertEquals("Item description", userCartDetails.getItemDescription());
-////        assertEquals(100.0f, userCartDetails.getItemCost());
-////        assertEquals('A', userCartDetails.getStatus());
-////    }
+/// /    @Test
+/// /    public void testConstructorAndGetters() {
+/// /        // Arrange
+/// /        UserDetails userDetails = new UserDetails();
+/// /        userDetails.setUsername("testUser");
+/// /        userDetails.setPassword("password");
+/// /
+/// /        // Act
+/// /        UserCartDetails userCartDetails = new UserCartDetails();
+/// /
+/// /        // Assert
+/// /        assertEquals(0, userCartDetails.getCartItemId());
+/// /        assertEquals(userDetails, userCartDetails.getUserDetails());
+/// /        assertEquals(2, userCartDetails.getItemQuantity());
+/// /        assertEquals("Item description", userCartDetails.getItemDescription());
+/// /        assertEquals(100.0f, userCartDetails.getItemCost());
+/// /        assertEquals('A', userCartDetails.getStatus());
+/// /    }
 //
 //    @Test
 //    public void testSetterMethods() {

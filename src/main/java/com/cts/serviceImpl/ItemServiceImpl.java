@@ -23,7 +23,7 @@ public class ItemServiceImpl implements ItemService {
         this.itemRepository = itemRepository;
         this.thumbnailService = thumbnailService;
     }
-    
+
 
     @Override
     public ItemDetails getItemByName(String name) {
