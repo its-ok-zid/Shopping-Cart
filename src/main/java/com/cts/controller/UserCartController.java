@@ -6,6 +6,7 @@ import com.cts.model.UserCartDetails;
 import com.cts.repository.UserRepository;
 import com.cts.service.UserCartService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/usercart")
+@PreAuthorize("hasRole('USER')")
 public class UserCartController {
 
     private final UserCartService userCartService;

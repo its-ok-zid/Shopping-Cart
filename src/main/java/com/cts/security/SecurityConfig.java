@@ -34,25 +34,29 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
 
-                        // 🔓 PUBLIC
+                        // 🔓 AUTH ONLY
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/items/**").authenticated()
 
-                        // 🛒 USER ONLY
-                        .requestMatchers("/api/usercart/**").hasRole("USER")
-
-                        // 🔒 ADMIN ONLY
+                        // 📦 ITEMS
+                        .requestMatchers(HttpMethod.GET, "/api/items/**").hasRole("USER")
                         .requestMatchers(HttpMethod.POST, "/api/items/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/items/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/items/**").hasRole("ADMIN")
+
+                        // 🛒 USER CART
+                        .requestMatchers("/api/usercart/**").hasRole("USER")
+
+                        // 👤 ADMIN
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
+                        // 🔐 EVERYTHING ELSE
                         .anyRequest().authenticated()
                 )
-
-                .addFilterBefore(jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
         return http.build();
     }

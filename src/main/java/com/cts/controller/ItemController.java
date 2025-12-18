@@ -38,6 +38,7 @@ public class ItemController {
 
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ItemDetails> getItem(@PathVariable Long id) {
         return itemRepository.findById(id)
                 .map(ResponseEntity::ok)
@@ -46,6 +47,7 @@ public class ItemController {
 
 
     @GetMapping
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<List<ItemResponseDTO>>> getAllItems() {
         return ResponseEntity.ok(
                 ApiResponse.<List<ItemResponseDTO>>builder()
