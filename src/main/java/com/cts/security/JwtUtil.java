@@ -48,5 +48,17 @@ public class JwtUtil {
         return claims.getSubject();
     }
 
+    public void validateToken(String token) {
+        getClaims(token); // throws exception if invalid
+    }
+
+    private Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSecretKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
 
 }

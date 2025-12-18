@@ -7,18 +7,18 @@ import com.cts.dto.SignUpResponseDTO;
 import com.cts.model.Role;
 import com.cts.model.User;
 import com.cts.repository.UserRepository;
-import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthService {
 
     private final AuthenticationManager authenticationManager;
@@ -26,36 +26,33 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public LoginResponseDTO login(@Valid LoginRequestDTO loginRequest) {
+    public LoginResponseDTO login(LoginRequestDTO request) {
 
-        Authentication authentication = authenticationManager.authenticate(
+        Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
+                        request.getUsername(),
+                        request.getPassword()
                 )
         );
 
-        String username = authentication.getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         String token = jwtUtil.generateAccessToken(user);
 
         return new LoginResponseDTO(user.getId(), token);
     }
 
+    public SignUpResponseDTO signUp(SignUpRequestDTO request) {
 
-    public SignUpResponseDTO signUp(SignUpRequestDTO signUpRequest) {
-
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            throw new RuntimeException("Username already exists");
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username already exists");
         }
 
         User user = User.builder()
-                .username(signUpRequest.getUsername())
-                .password(passwordEncoder.encode(signUpRequest.getPassword()))
-                .email(signUpRequest.getEmail())
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Set.of(Role.ROLE_USER))
                 .build();
 
@@ -63,5 +60,4 @@ public class AuthService {
 
         return new SignUpResponseDTO(user.getId(), user.getUsername());
     }
-
 }
