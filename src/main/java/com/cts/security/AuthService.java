@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Set;
 
 @Service
@@ -24,6 +25,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
 
     public LoginResponseDTO login(LoginRequestDTO request) {
@@ -38,10 +40,22 @@ public class AuthService {
         User user = userRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        String token = jwtUtil.generateAccessToken(user);
+        String accessToken = jwtUtil.generateAccessToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
 
-        return new LoginResponseDTO(user.getId(), token);
+        refreshTokenRepository.deleteByUser(user);
+
+        refreshTokenRepository.save(
+                RefreshToken.builder()
+                        .user(user)
+                        .token(refreshToken)
+                        .expiryDate(Instant.now().plusSeconds(7 * 24 * 60 * 60))
+                        .build()
+        );
+
+        return new LoginResponseDTO(user.getId(), accessToken);
     }
+
 
     public SignUpResponseDTO signUp(SignUpRequestDTO request) {
 

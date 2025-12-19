@@ -61,4 +61,14 @@ public class JwtUtil {
     }
 
 
+    public String generateRefreshToken(User user) {
+        return Jwts.builder()
+                .setSubject(user.getUsername())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
+                .signWith(getSecretKey())
+                .compact();
+    }
+
+
 }
