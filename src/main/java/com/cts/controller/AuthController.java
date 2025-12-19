@@ -30,7 +30,7 @@ import java.time.Instant;
 public class AuthController {
 
     private final AuthService authService;
-    private RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
 
     @PostMapping("/signup")
