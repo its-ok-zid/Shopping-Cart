@@ -21,6 +21,15 @@
         <springfox.version>3.0.0</springfox.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/its-ok-zid/common-security</url>
+        </repository>
+    </repositories>
+
+
     <dependencies>
         <!-- JPA -->
         <dependency>
@@ -32,6 +41,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.zidtech.security</groupId>
+            <artifactId>common-security</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
         <!-- Maven (pom.xml) -->
@@ -80,30 +95,6 @@
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-sync</artifactId>
             <version>4.11.0</version>
-        </dependency>
-        <!-- Spring Security -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-
-        <!-- JWT (JJWT) -->
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-api</artifactId>
-            <version>0.11.5</version>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
-            <version>0.11.5</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId> <!-- for Jackson serializers -->
-            <version>0.11.5</version>
-            <scope>runtime</scope>
         </dependency>
         <!-- Validation -->
         <dependency>
