@@ -12,6 +12,7 @@ public class ShoppingCartSecurityPolicy implements SecurityPolicyCustomizer {
 
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/**").hasRole("USER")
                 .anyRequest().authenticated()

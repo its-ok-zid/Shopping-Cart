@@ -38,7 +38,11 @@ public class AuthServiceImpl implements AuthService {
         var refresh = refreshTokenService.create(user.getUsername());
         var pair = jwtUtil.generateTokenPair(user.getUsername(), refresh.getToken());
 
-        return new LoginResponseDTO(user.getId(), pair.getAccessToken());
+        return new LoginResponseDTO(
+                user.getId(),
+                pair.getAccessToken(),
+                refresh.getToken());
+
     }
 
     @Override
