@@ -5,7 +5,10 @@ import com.cts.dto.LoginResponseDTO;
 import com.cts.dto.SignUpRequestDTO;
 import com.cts.dto.SignUpResponseDTO;
 import com.cts.exception.ApiResponse;
+import com.cts.model.RefreshToken;
 import com.cts.model.User;
+import com.cts.repository.RefreshTokenRepository;
+import com.cts.service.AuthService;
 import com.zidtech.common.security.util.JwtUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,8 +30,8 @@ import java.time.Instant;
 public class AuthController {
 
     private final AuthService authService;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
+    private RefreshTokenRepository refreshTokenRepository;
 
     @PostMapping("/signup")
     public ResponseEntity<SignUpResponseDTO> signup(@RequestBody SignUpRequestDTO signUpRequest) {
@@ -88,7 +91,8 @@ public class AuthController {
         }
 
         User user = token.getUser();
-        String newAccessToken = jwtUtil.generateAccessToken(user);
+        String newAccessToken = jwtUtil.generateToken(user.getUsername());
+
 
         Cookie accessCookie = new Cookie("ACCESS_TOKEN", newAccessToken);
         accessCookie.setHttpOnly(true);
