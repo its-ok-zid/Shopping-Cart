@@ -5,7 +5,6 @@ import com.cts.dto.LoginResponseDTO;
 import com.cts.dto.SignUpRequestDTO;
 import com.cts.dto.SignUpResponseDTO;
 import com.cts.exception.ApiResponse;
-import com.cts.model.RefreshToken;
 import com.cts.model.User;
 import com.cts.repository.RefreshTokenRepository;
 import com.cts.service.AuthService;
@@ -16,13 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.Instant;
 
 @RestController
 @RequiredArgsConstructor
@@ -47,7 +43,6 @@ public class AuthController {
 
         Cookie accessCookie = new Cookie("ACCESS_TOKEN", loginResponse.getJwt());
         accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(false);
         accessCookie.setPath("/");
         accessCookie.setMaxAge(3600);
 
@@ -55,6 +50,7 @@ public class AuthController {
 
         return ResponseEntity.ok(loginResponse);
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(Authentication auth, HttpServletResponse response) {
@@ -77,32 +73,5 @@ public class AuthController {
                         .build()
         );
     }
-
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(
-            @CookieValue("REFRESH_TOKEN") String refreshToken,
-            HttpServletResponse response) {
-
-        RefreshToken token = refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
-
-        if (token.getExpiryDate().isBefore(Instant.now())) {
-            throw new RuntimeException("Refresh token expired");
-        }
-
-        User user = token.getUser();
-        String newAccessToken = jwtUtil.generateToken(user.getUsername());
-
-
-        Cookie accessCookie = new Cookie("ACCESS_TOKEN", newAccessToken);
-        accessCookie.setHttpOnly(true);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge(3600);
-
-        response.addCookie(accessCookie);
-
-        return ResponseEntity.ok().build();
-    }
-
 
 }

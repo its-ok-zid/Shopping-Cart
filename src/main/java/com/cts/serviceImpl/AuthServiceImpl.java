@@ -4,29 +4,26 @@ import com.cts.dto.LoginRequestDTO;
 import com.cts.dto.LoginResponseDTO;
 import com.cts.dto.SignUpRequestDTO;
 import com.cts.dto.SignUpResponseDTO;
-import com.cts.model.RefreshToken;
 import com.cts.model.Role;
 import com.cts.model.User;
-import com.cts.repository.RefreshTokenRepository;
 import com.cts.repository.UserRepository;
 import com.cts.service.AuthService;
+import com.zidtech.common.security.service.RefreshTokenService;
 import com.zidtech.common.security.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.Set;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public LoginResponseDTO login(LoginRequestDTO request) {
@@ -38,20 +35,14 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String accessToken = jwtUtil.generateToken(user.getUsername());
+        var refresh = refreshTokenService.create(user.getUsername());
+        var pair = jwtUtil.generateTokenPair(user.getUsername(), refresh.getToken());
 
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(UUID.randomUUID().toString());
-        refreshToken.setUser(user);
-        refreshToken.setExpiryDate(Instant.now().plusSeconds(7 * 24 * 60 * 60));
-        refreshTokenRepository.save(refreshToken);
-
-        return new LoginResponseDTO(user.getId(), accessToken);
+        return new LoginResponseDTO(user.getId(), pair.getAccessToken());
     }
 
     @Override
     public SignUpResponseDTO signUp(SignUpRequestDTO request) {
-
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
