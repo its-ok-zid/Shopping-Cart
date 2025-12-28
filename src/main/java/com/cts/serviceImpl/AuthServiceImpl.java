@@ -8,8 +8,6 @@ import com.cts.model.Role;
 import com.cts.model.User;
 import com.cts.repository.UserRepository;
 import com.cts.service.AuthService;
-import com.zidtech.common.security.service.RefreshTokenService;
-import com.zidtech.common.security.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,8 +20,6 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final RefreshTokenService refreshTokenService;
 
     @Override
     public LoginResponseDTO login(LoginRequestDTO request) {
@@ -35,18 +31,13 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        var refresh = refreshTokenService.create(user.getUsername());
-        var pair = jwtUtil.generateTokenPair(user.getUsername(), refresh.getToken());
-
-        return new LoginResponseDTO(
-                user.getId(),
-                pair.getAccessToken(),
-                refresh.getToken());
-
+        // ⛔ NO TOKEN LOGIC HERE
+        return new LoginResponseDTO(user.getId(), null, null);
     }
 
     @Override
     public SignUpResponseDTO signUp(SignUpRequestDTO request) {
+
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());

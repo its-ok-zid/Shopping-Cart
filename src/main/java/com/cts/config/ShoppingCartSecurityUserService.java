@@ -16,6 +16,7 @@ public class ShoppingCartSecurityUserService implements SecurityUserService {
 
     @Override
     public SecurityUser loadByUsername(String username) {
+
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

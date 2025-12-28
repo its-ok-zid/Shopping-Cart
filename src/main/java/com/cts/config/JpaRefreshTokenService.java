@@ -3,6 +3,7 @@ package com.cts.config;
 import com.cts.model.User;
 import com.cts.repository.RefreshTokenRepository;
 import com.cts.repository.UserRepository;
+import com.zidtech.common.security.model.RefreshToken;
 import com.zidtech.common.security.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,38 +20,25 @@ public class JpaRefreshTokenService implements RefreshTokenService {
     private final UserRepository userRepo;
 
     @Override
-    public com.zidtech.common.security.model.RefreshToken create(String username) {
+    public RefreshToken issue(String username) {
 
         User user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 🔁 REFRESH TOKEN ROTATION (invalidate previous tokens)
+        // 🔁 invalidate existing tokens (safety)
         repo.deleteByUserUsername(username);
 
-        com.cts.model.RefreshToken entity = new com.cts.model.RefreshToken();
-        entity.setToken(UUID.randomUUID().toString());
-        entity.setUser(user);
-        entity.setExpiryDate(Instant.now().plusSeconds(7 * 24 * 60 * 60));
-
-        repo.save(entity);
-
-        return com.zidtech.common.security.model.RefreshToken.builder()
-                .token(entity.getToken())
-                .username(username)
-                .expiry(entity.getExpiryDate())
-                .build();
+        return saveNewToken(user);
     }
 
     @Override
-    public Optional<com.zidtech.common.security.model.RefreshToken> find(String token) {
+    public Optional<RefreshToken> validate(String token) {
         return repo.findByToken(token)
-                .map(entity ->
-                        com.zidtech.common.security.model.RefreshToken.builder()
-                                .token(entity.getToken())
-                                .username(entity.getUser().getUsername())
-                                .expiry(entity.getExpiryDate())
-                                .build()
-                );
+                .map(entity -> RefreshToken.builder()
+                        .token(entity.getToken())
+                        .username(entity.getUser().getUsername())
+                        .expiry(entity.getExpiryDate())
+                        .build());
     }
 
     @Override
@@ -61,5 +49,39 @@ public class JpaRefreshTokenService implements RefreshTokenService {
     @Override
     public void invalidateAll(String username) {
         repo.deleteByUserUsername(username);
+    }
+
+    // ✅ REQUIRED BY COMMON-SECURITY
+    @Override
+    public RefreshToken rotate(String oldToken) {
+
+        var existing = repo.findByToken(oldToken)
+                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+
+        String username = existing.getUser().getUsername();
+
+        // 🔁 HARD ROTATION — delete old token
+        repo.delete(existing);
+
+        return create(username);
+    }
+
+    // 🔒 internal helper
+    private RefreshToken saveNewToken(User user) {
+
+        com.cts.model.RefreshToken entity = new com.cts.model.RefreshToken();
+        entity.setToken(UUID.randomUUID().toString());
+        entity.setUser(user);
+        entity.setExpiryDate(
+                Instant.now().plusSeconds(7 * 24 * 60 * 60)
+        );
+
+        repo.save(entity);
+
+        return RefreshToken.builder()
+                .token(entity.getToken())
+                .username(user.getUsername())
+                .expiry(entity.getExpiryDate())
+                .build();
     }
 }
