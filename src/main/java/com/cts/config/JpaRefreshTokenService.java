@@ -41,30 +41,26 @@ public class JpaRefreshTokenService implements RefreshTokenService {
                         .build());
     }
 
-    @Override
-    public void invalidate(String token) {
-        repo.deleteByToken(token);
-    }
 
     @Override
     public void invalidateAll(String username) {
         repo.deleteByUserUsername(username);
     }
 
-    // ✅ REQUIRED BY COMMON-SECURITY
     @Override
     public RefreshToken rotate(String oldToken) {
 
         var existing = repo.findByToken(oldToken)
                 .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
 
-        String username = existing.getUser().getUsername();
+        User user = existing.getUser();
 
-        // 🔁 HARD ROTATION — delete old token
+        // 🔁 HARD ROTATION
         repo.delete(existing);
 
-        return create(username);
+        return saveNewToken(user);
     }
+
 
     // 🔒 internal helper
     private RefreshToken saveNewToken(User user) {
