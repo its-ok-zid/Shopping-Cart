@@ -2,7 +2,6 @@ package com.cts.service;
 
 import com.cts.model.UserCartDetails;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ public interface UserCartService {
     void addToCart(long userId, String itemName, int itemQuantity);
 
     /**
-     * Get all cart rows in the system (admin use).
+     * Get all cart rows in the system.
      */
     ResponseEntity<List<UserCartDetails>> getAllUserCartItems();
 
@@ -34,6 +33,4 @@ public interface UserCartService {
      */
     void removeFromCart(long userId, int cartItemId);
 
-
-    long getUserId(Authentication auth);
 }

@@ -11,7 +11,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +37,6 @@ public class ItemController {
 
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ItemDetails> getItem(@PathVariable Long id) {
         return itemRepository.findById(id)
                 .map(ResponseEntity::ok)
@@ -47,7 +45,6 @@ public class ItemController {
 
 
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<List<ItemResponseDTO>>> getAllItems() {
         return ResponseEntity.ok(
                 ApiResponse.<List<ItemResponseDTO>>builder()
@@ -59,7 +56,6 @@ public class ItemController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ItemResponseDTO>> createItem(
             @RequestPart("item") @Valid ItemRequestDTO item,
@@ -73,7 +69,6 @@ public class ItemController {
                         .build());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<ItemResponseDTO>> updateItem(
             @PathVariable Long id,

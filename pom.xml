@@ -21,15 +21,6 @@
         <springfox.version>3.0.0</springfox.version>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/its-ok-zid/common-security</url>
-        </repository>
-    </repositories>
-
-
     <dependencies>
         <!-- JPA -->
         <dependency>
@@ -41,12 +32,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.zidtech.security</groupId>
-            <artifactId>common-security</artifactId>
-            <version>1.0.4</version>
         </dependency>
 
         <!-- Maven (pom.xml) -->

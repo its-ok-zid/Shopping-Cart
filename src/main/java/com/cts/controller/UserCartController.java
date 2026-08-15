@@ -1,13 +1,9 @@
 package com.cts.controller;
 
 import com.cts.exception.ApiResponse;
-import com.cts.model.User;
 import com.cts.model.UserCartDetails;
-import com.cts.repository.UserRepository;
 import com.cts.service.UserCartService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,24 +16,21 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/usercart")
-@PreAuthorize("hasRole('USER')")
 public class UserCartController {
 
     private final UserCartService userCartService;
-    private final UserRepository userRepository;
 
-    public UserCartController(UserCartService userCartService, UserRepository userRepository) {
+    public UserCartController(UserCartService userCartService) {
         this.userCartService = userCartService;
-        this.userRepository = userRepository;
     }
 
     @PostMapping("/add")
     public ResponseEntity<ApiResponse<String>> addToCart(
-            Authentication auth,
+            @RequestParam long userId,
             @RequestParam String itemName,
             @RequestParam int quantity) {
 
-        userCartService.addToCart(userCartService.getUserId(auth), itemName, quantity);
+        userCartService.addToCart(userId, itemName, quantity);
 
         return ResponseEntity.ok(
                 ApiResponse.<String>builder()
@@ -47,38 +40,27 @@ public class UserCartController {
                         .build());
     }
 
-
-    // Admin: get all carts (protected by SecurityConfig)
     @GetMapping("/all")
     public ResponseEntity<List<UserCartDetails>> getAllUserCartItems() {
         return userCartService.getAllUserCartItems();
     }
 
-    // User: get their own cart
-    @GetMapping("/me")
-    public ResponseEntity<List<UserCartDetails>> getMyCart(Authentication auth) {
-        String username = auth.getName();
-        User user = userRepository.findByUsername(username).orElseThrow();
-        return userCartService.getUserCartItems(user.getId());
+    @GetMapping("/user")
+    public ResponseEntity<List<UserCartDetails>> getUserCartItems(@RequestParam long userId) {
+        return userCartService.getUserCartItems(userId);
     }
 
-    // Modify quantity of a cart item (owner only)
     @PutMapping("/modify")
-    public ResponseEntity<String> modifyUserCartItem(Authentication auth,
+    public ResponseEntity<String> modifyUserCartItem(@RequestParam long userId,
                                                      @RequestParam int cartItemId,
                                                      @RequestParam int newQuantity) {
-        String username = auth.getName();
-        User user = userRepository.findByUsername(username).orElseThrow();
-        userCartService.modifyItemQuantity(user.getId(), cartItemId, newQuantity);
+        userCartService.modifyItemQuantity(userId, cartItemId, newQuantity);
         return ResponseEntity.ok("Item quantity modified successfully");
     }
 
-    // Remove item
     @DeleteMapping("/remove")
-    public ResponseEntity<String> removeItem(Authentication auth, @RequestParam int cartItemId) {
-        String username = auth.getName();
-        User user = userRepository.findByUsername(username).orElseThrow();
-        userCartService.removeFromCart(user.getId(), cartItemId);
+    public ResponseEntity<String> removeItem(@RequestParam long userId, @RequestParam int cartItemId) {
+        userCartService.removeFromCart(userId, cartItemId);
         return ResponseEntity.ok("Item removed");
     }
 }

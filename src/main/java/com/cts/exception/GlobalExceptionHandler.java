@@ -1,12 +1,8 @@
 package com.cts.exception;
 
-import io.jsonwebtoken.JwtException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -34,28 +30,6 @@ public class GlobalExceptionHandler {
                         .success(false)
                         .errorCode("ITEM_OPERATION_FAILED")
                         .message(ex.getMessage())
-                        .build());
-    }
-
-    // ================= AUTH =================
-
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentials() {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponse.builder()
-                        .success(false)
-                        .errorCode("INVALID_CREDENTIALS")
-                        .message("Username or password is incorrect")
-                        .build());
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleForbidden() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ErrorResponse.builder()
-                        .success(false)
-                        .errorCode("ACCESS_DENIED")
-                        .message("You do not have permission to access this resource")
                         .build());
     }
 
@@ -89,31 +63,6 @@ public class GlobalExceptionHandler {
                         .message("Something went wrong. Please try again later.")
                         .build());
     }
-
-
-    @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFound(
-            UsernameNotFoundException ex) {
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                ErrorResponse.builder()
-                        .success(false)
-                        .errorCode("USER_NOT_FOUND")
-                        .message(ex.getMessage())
-                        .build()
-        );
-    }
-
-    @ExceptionHandler(JwtException.class)
-    public ResponseEntity<ErrorResponse> handleJwt(JwtException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponse.builder()
-                        .success(false)
-                        .errorCode("INVALID_JWT")
-                        .message("Invalid or expired token")
-                        .build());
-    }
-
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
