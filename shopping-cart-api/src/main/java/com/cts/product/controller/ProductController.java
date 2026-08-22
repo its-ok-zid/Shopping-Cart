@@ -4,6 +4,8 @@ import com.cts.common.api.ApiResponse;
 import com.cts.common.api.PageResponse;
 import com.cts.product.api.CreateProductRequest;
 import com.cts.product.api.ProductResponse;
+import com.cts.product.api.StockUpdateRequest;
+import com.cts.product.api.UpdateProductRequest;
 import com.cts.product.service.ProductService;
 import com.cts.security.SecurityPrincipal;
 import jakarta.validation.Valid;
@@ -16,9 +18,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -76,5 +81,37 @@ public class ProductController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Product created successfully", response));
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @PatchMapping("/seller/products/{id}")
+    public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
+            @AuthenticationPrincipal SecurityPrincipal principal,
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateProductRequest request) {
+        Long sellerId = Long.parseLong(principal.userId());
+        return ResponseEntity.ok(ApiResponse.ok("Product updated successfully",
+                productService.updateProduct(sellerId, id, request, false)));
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @PatchMapping("/seller/products/{id}/stock")
+    public ResponseEntity<ApiResponse<ProductResponse>> updateStock(
+            @AuthenticationPrincipal SecurityPrincipal principal,
+            @PathVariable Long id,
+            @Valid @RequestBody StockUpdateRequest request) {
+        Long sellerId = Long.parseLong(principal.userId());
+        return ResponseEntity.ok(ApiResponse.ok("Stock updated successfully",
+                productService.updateStock(sellerId, id, request)));
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @DeleteMapping("/seller/products/{id}")
+    public ResponseEntity<ApiResponse<Void>> deactivateProduct(
+            @AuthenticationPrincipal SecurityPrincipal principal,
+            @PathVariable Long id) {
+        Long sellerId = Long.parseLong(principal.userId());
+        productService.deactivateProduct(sellerId, id, false);
+        return ResponseEntity.ok(ApiResponse.ok("Product deactivated successfully", null));
     }
 }

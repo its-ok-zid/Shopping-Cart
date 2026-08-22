@@ -4,6 +4,8 @@ import com.cts.common.api.PageResponse;
 import com.cts.common.error.ApiException;
 import com.cts.product.api.CreateProductRequest;
 import com.cts.product.api.ProductResponse;
+import com.cts.product.api.StockUpdateRequest;
+import com.cts.product.api.UpdateProductRequest;
 import com.cts.product.domain.Product;
 import com.cts.product.repository.ProductRepository;
 import com.cts.user.domain.AppUser;
@@ -30,8 +32,8 @@ public class ProductServiceImpl implements ProductService {
     private final GridFsTemplate gridFsTemplate;
     private final GridFsOperations gridFsOperations;
 
-    public ProductServiceImpl(ProductRepository productRepository, 
-                              UserRepository userRepository, 
+    public ProductServiceImpl(ProductRepository productRepository,
+                              UserRepository userRepository,
                               GridFsTemplate gridFsTemplate,
                               GridFsOperations gridFsOperations) {
         this.productRepository = productRepository;
@@ -68,9 +70,9 @@ public class ProductServiceImpl implements ProductService {
 
         try {
             // 2. Save Data to PostgreSQL
-            Product product = new Product(seller, request.sku(), request.name(), 
+            Product product = new Product(seller, request.sku(), request.name(),
                     request.description(), request.price(), request.stock());
-            
+
             if (thumbnailId != null) {
                 product.replaceThumbnail(thumbnailId);
             }
@@ -119,6 +121,48 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return gridFsOperations.getResource(file);
+    }
+
+    @Override
+    @Transactional
+    public ProductResponse updateProduct(Long sellerId, Long productId, UpdateProductRequest request, boolean isAdmin) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> ApiException.notFound("Product"));
+
+        if (!isAdmin && !product.getSeller().getId().equals(sellerId)) {
+            throw ApiException.forbidden("You do not own this product");
+        }
+
+        product.update(request.sku(), request.name(), request.description(), request.price(), request.stock());
+        return mapToResponse(productRepository.save(product));
+    }
+
+    @Override
+    @Transactional
+    public ProductResponse updateStock(Long sellerId, Long productId, StockUpdateRequest request) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> ApiException.notFound("Product"));
+
+        if (!product.getSeller().getId().equals(sellerId)) {
+            throw ApiException.forbidden("You do not own this product");
+        }
+
+        product.restock(request.stock());
+        return mapToResponse(productRepository.save(product));
+    }
+
+    @Override
+    @Transactional
+    public void deactivateProduct(Long sellerId, Long productId, boolean isAdmin) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> ApiException.notFound("Product"));
+
+        if (!isAdmin && !product.getSeller().getId().equals(sellerId)) {
+            throw ApiException.forbidden("You do not own this product");
+        }
+
+        product.deactivate();
+        productRepository.save(product);
     }
 
     private ProductResponse mapToResponse(Product product) {

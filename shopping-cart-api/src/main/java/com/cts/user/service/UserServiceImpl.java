@@ -2,6 +2,7 @@ package com.cts.user.service;
 
 import com.cts.common.error.ApiException;
 import com.cts.user.api.RoleUpdateRequest;
+import com.cts.user.api.UpdateProfileRequest;
 import com.cts.user.api.UserResponse;
 import com.cts.user.domain.AppUser;
 import com.cts.user.repository.UserRepository;
@@ -21,17 +22,31 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public UserResponse getCurrentUserProfile(Long userId) {
+        AppUser user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.notFound("User"));
+        return mapToUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        AppUser user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.notFound("User"));
+
+        user.setDisplayName(request.displayName());
+        return mapToUserResponse(userRepository.save(user));
+    }
+
+    @Override
     @Transactional
     public UserResponse updateUserRoles(Long userId, RoleUpdateRequest request) {
         AppUser user = userRepository.findById(userId)
                 .orElseThrow(() -> ApiException.notFound("User"));
 
-        // Overwrite the existing roles with the new set of roles
         user.setRoles(request.roles());
-        
-        AppUser savedUser = userRepository.save(user);
-        
-        return mapToUserResponse(savedUser);
+        return mapToUserResponse(userRepository.save(user));
     }
 
     private UserResponse mapToUserResponse(AppUser user) {
