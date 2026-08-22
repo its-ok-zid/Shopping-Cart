@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Shopping Cart API",
-    "description": "Modular Monolith E-Commerce API (Phase 1). Includes Auth, Catalog, Cart, and Checkout.",
+    "description": "Enterprise Modular Monolith API (Phase 1). Complete specification for Auth, Users, Admin, Products, Cart, and Orders.",
     "version": "1.0.0"
   },
   "servers": [
@@ -12,23 +12,23 @@
     }
   ],
   "tags": [
-    { "name": "Auth", "description": "Authentication and Registration" },
-    { "name": "Admin", "description": "RBAC and User Management" },
-    { "name": "Products (Public)", "description": "Public Catalog Browsing" },
+    { "name": "Auth", "description": "Authentication and Token Rotation" },
+    { "name": "Users", "description": "Authenticated Profile Management" },
+    { "name": "Admin", "description": "Role-Based Access Control (RBAC)" },
+    { "name": "Products (Public)", "description": "Public Catalog Discovery" },
     { "name": "Products (Seller)", "description": "Seller Inventory Management" },
-    { "name": "Cart & Checkout", "description": "Customer Cart Operations" }
+    { "name": "Cart", "description": "Customer Cart Operations" },
+    { "name": "Orders", "description": "Order Receipts & History" }
   ],
   "paths": {
     "/api/auth/register": {
       "post": {
         "tags": ["Auth"],
-        "summary": "Register a new Customer",
+        "summary": "Register a new Customer account",
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
-            }
+            "application/json": { "schema": { "$ref": "#/components/schemas/RegisterRequest" } }
           }
         },
         "responses": {
@@ -39,67 +39,75 @@
     "/api/auth/login": {
       "post": {
         "tags": ["Auth"],
-        "summary": "Authenticate user and get JWT",
+        "summary": "Authenticate user and issue tokens",
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/LoginRequest" }
-            }
+            "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } }
           }
         },
         "responses": {
-          "200": {
-            "description": "Login successful. Returns Access Token and sets HttpOnly Refresh Token cookie."
-          }
+          "200": { "description": "Login successful. Returns access token in body and sets HttpOnly refresh cookie." }
         }
       }
     },
     "/api/auth/refresh": {
       "post": {
         "tags": ["Auth"],
-        "summary": "Refresh Access Token",
+        "summary": "Rotate refresh token and issue new access token",
         "parameters": [
-          {
-            "name": "shopping_refresh",
-            "in": "cookie",
-            "schema": { "type": "string" },
-            "required": true
-          }
+          { "name": "shopping_refresh", "in": "cookie", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": { "description": "Token refreshed successfully" }
+          "200": { "description": "Token rotated successfully" }
         }
       }
     },
     "/api/auth/logout": {
       "post": {
         "tags": ["Auth"],
-        "summary": "Revoke session and clear cookies",
+        "summary": "Revoke session and clear refresh cookie",
         "responses": {
           "200": { "description": "Logged out successfully" }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get authenticated user profile",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Profile fetched successfully" }
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Update user display name",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateProfileRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profile updated successfully" }
         }
       }
     },
     "/api/admin/users/{id}/roles": {
       "put": {
         "tags": ["Admin"],
-        "summary": "Update User Roles (Requires ADMIN)",
-        "security": [ { "BearerAuth": [] } ],
+        "summary": "Update user roles (Requires ADMIN)",
+        "security": [{ "BearerAuth": [] }],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer" }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/RoleUpdateRequest" }
-            }
+            "application/json": { "schema": { "$ref": "#/components/schemas/RoleUpdateRequest" } }
           }
         },
         "responses": {
@@ -110,7 +118,7 @@
     "/api/products": {
       "get": {
         "tags": ["Products (Public)"],
-        "summary": "Get all active products (Paged)",
+        "summary": "Page active products",
         "parameters": [
           { "name": "page", "in": "query", "schema": { "type": "integer", "default": 0 } },
           { "name": "size", "in": "query", "schema": { "type": "integer", "default": 10 } }
@@ -123,7 +131,7 @@
     "/api/products/{id}": {
       "get": {
         "tags": ["Products (Public)"],
-        "summary": "Get a specific product by ID",
+        "summary": "Get product by ID",
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
@@ -135,7 +143,7 @@
     "/api/products/{id}/thumbnail": {
       "get": {
         "tags": ["Products (Public)"],
-        "summary": "Stream product thumbnail image",
+        "summary": "Stream product thumbnail image from MongoDB GridFS",
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
@@ -153,8 +161,8 @@
     "/api/seller/products": {
       "post": {
         "tags": ["Products (Seller)"],
-        "summary": "Create a new product (Requires SELLER)",
-        "security": [ { "BearerAuth": [] } ],
+        "summary": "Create a new product with thumbnail (Requires SELLER)",
+        "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -174,11 +182,60 @@
         }
       }
     },
+    "/api/seller/products/{id}": {
+      "patch": {
+        "tags": ["Products (Seller)"],
+        "summary": "Partially update product details (Requires owning SELLER)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateProductRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Product updated successfully" }
+        }
+      },
+      "delete": {
+        "tags": ["Products (Seller)"],
+        "summary": "Deactivate product (Requires owning SELLER)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Product deactivated successfully" }
+        }
+      }
+    },
+    "/api/seller/products/{id}/stock": {
+      "patch": {
+        "tags": ["Products (Seller)"],
+        "summary": "Restock product inventory (Requires owning SELLER)",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/StockUpdateRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Stock updated successfully" }
+        }
+      }
+    },
     "/api/cart": {
       "get": {
-        "tags": ["Cart & Checkout"],
+        "tags": ["Cart"],
         "summary": "Get current customer's cart",
-        "security": [ { "BearerAuth": [] } ],
+        "security": [{ "BearerAuth": [] }],
         "responses": {
           "200": { "description": "Cart fetched successfully" }
         }
@@ -186,9 +243,9 @@
     },
     "/api/cart/items": {
       "post": {
-        "tags": ["Cart & Checkout"],
+        "tags": ["Cart"],
         "summary": "Add item to cart",
-        "security": [ { "BearerAuth": [] } ],
+        "security": [{ "BearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -202,9 +259,9 @@
     },
     "/api/cart/items/{cartItemId}": {
       "patch": {
-        "tags": ["Cart & Checkout"],
-        "summary": "Update cart item quantity",
-        "security": [ { "BearerAuth": [] } ],
+        "tags": ["Cart"],
+        "summary": "Update item quantity in cart",
+        "security": [{ "BearerAuth": [] }],
         "parameters": [
           { "name": "cartItemId", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
@@ -215,13 +272,13 @@
           }
         },
         "responses": {
-          "200": { "description": "Cart updated" }
+          "200": { "description": "Cart updated successfully" }
         }
       },
       "delete": {
-        "tags": ["Cart & Checkout"],
-        "summary": "Remove item from cart",
-        "security": [ { "BearerAuth": [] } ],
+        "tags": ["Cart"],
+        "summary": "Remove item line from cart",
+        "security": [{ "BearerAuth": [] }],
         "parameters": [
           { "name": "cartItemId", "in": "path", "required": true, "schema": { "type": "integer" } }
         ],
@@ -232,11 +289,38 @@
     },
     "/api/cart/checkout": {
       "post": {
-        "tags": ["Cart & Checkout"],
-        "summary": "Checkout cart and create Order",
-        "security": [ { "BearerAuth": [] } ],
+        "tags": ["Cart"],
+        "summary": "Checkout cart and generate purchase order",
+        "security": [{ "BearerAuth": [] }],
         "responses": {
           "200": { "description": "Order placed successfully" }
+        }
+      }
+    },
+    "/api/orders": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Page authenticated customer's order history",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 0 } },
+          { "name": "size", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "Orders fetched successfully" }
+        }
+      }
+    },
+    "/api/orders/{id}": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Read single order receipt",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Order fetched successfully" }
         }
       }
     }
@@ -252,6 +336,7 @@
     "schemas": {
       "RegisterRequest": {
         "type": "object",
+        "required": ["username", "email", "password", "displayName"],
         "properties": {
           "username": { "type": "string", "example": "zidan" },
           "email": { "type": "string", "example": "zidan@example.com" },
@@ -261,13 +346,22 @@
       },
       "LoginRequest": {
         "type": "object",
+        "required": ["identifier", "password"],
         "properties": {
           "identifier": { "type": "string", "example": "zidan" },
           "password": { "type": "string", "example": "SuperSecretPassword123" }
         }
       },
+      "UpdateProfileRequest": {
+        "type": "object",
+        "required": ["displayName"],
+        "properties": {
+          "displayName": { "type": "string", "example": "Zidan A." }
+        }
+      },
       "RoleUpdateRequest": {
         "type": "object",
+        "required": ["roles"],
         "properties": {
           "roles": {
             "type": "array",
@@ -278,16 +372,36 @@
       },
       "CreateProductRequest": {
         "type": "object",
+        "required": ["sku", "name", "description", "price", "stock"],
         "properties": {
-          "sku": { "type": "string", "example": "HEADPHONES-PRO-1" },
-          "name": { "type": "string", "example": "Pro Wireless Headphones" },
-          "description": { "type": "string", "example": "Noise-cancelling headphones." },
-          "price": { "type": "number", "format": "double", "example": 199.99 },
-          "stock": { "type": "integer", "example": 50 }
+          "sku": { "type": "string", "example": "GPU-RTX-5090" },
+          "name": { "type": "string", "example": "Nvidia RTX 5090" },
+          "description": { "type": "string", "example": "Flagship 32GB GDDR7." },
+          "price": { "type": "number", "example": 1999.99 },
+          "stock": { "type": "integer", "example": 25 }
+        }
+      },
+      "UpdateProductRequest": {
+        "type": "object",
+        "properties": {
+          "sku": { "type": "string", "example": "GPU-RTX-5090-V2" },
+          "name": { "type": "string", "example": "Nvidia RTX 5090 V2" },
+          "description": { "type": "string", "example": "Updated description." },
+          "price": { "type": "number", "example": 1899.99 },
+          "stock": { "type": "integer", "example": 30 }
+        }
+      },
+      "StockUpdateRequest": {
+        "type": "object",
+        "required": ["stock", "reason"],
+        "properties": {
+          "stock": { "type": "integer", "example": 40 },
+          "reason": { "type": "string", "example": "Warehouse restock batch #104" }
         }
       },
       "AddCartItemRequest": {
         "type": "object",
+        "required": ["productId", "quantity"],
         "properties": {
           "productId": { "type": "integer", "example": 1 },
           "quantity": { "type": "integer", "example": 2 }
@@ -295,8 +409,9 @@
       },
       "UpdateCartItemRequest": {
         "type": "object",
+        "required": ["quantity"],
         "properties": {
-          "quantity": { "type": "integer", "example": 3 }
+          "quantity": { "type": "integer", "example": 4 }
         }
       }
     }

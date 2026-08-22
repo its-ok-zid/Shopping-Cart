@@ -1,61 +1,52 @@
-# Shopping Cart API Contract
+# Shopping Cart API Contract (Phase 1)
 
-Base path: `/api`. All responses use JSON. Successful responses use
-`ApiResponse<T>`; errors use `{ "success": false, "code": "...", "message": "...",
-"traceId": "..." }`.
+Base path: `/api`. All responses use JSON wrapped in `ApiResponse<T>`. Errors return `{ "success": false, "code": "...", "message": "...", "traceId": "..." }`.
 
-Authentication endpoints may set or clear the refresh-token cookie. All other
-authenticated endpoints require `Authorization: Bearer <access-token>`.
+---
 
-## Authentication and account endpoints
+## 1. Authentication Endpoints
 
-| Method | Route | Authentication | Purpose |
+| Method | Route | Auth | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/auth/register` | Public | Register a customer account. The caller cannot assign roles. |
-| `POST` | `/auth/login` | Public | Verify password, return an access token, set refresh-token cookie. |
-| `POST` | `/auth/refresh` | Refresh cookie + CSRF protection | Rotate the refresh token and return a new access token. |
-| `POST` | `/auth/logout` | Access token or refresh cookie | Revoke refresh session and clear its cookie. |
-| `GET` | `/users/me` | Any authenticated user | Read the current account. |
-| `PATCH` | `/users/me` | Any authenticated user | Update permitted account profile fields. |
-| `PUT` | `/admin/users/{id}/roles` | `ADMIN` | Grant/revoke seller or admin roles. |
+| `POST` | `/auth/register` | Public | Register customer account. Automatically assigns `CUSTOMER` role. |
+| `POST` | `/auth/login` | Public | Verify password, return access token in body, set `shopping_refresh` cookie. |
+| `POST` | `/auth/refresh` | Cookie | Validate hashed token, rotate refresh token, return new access token. |
+| `POST` | `/auth/logout` | Authenticated | Revoke refresh token family and clear `shopping_refresh` cookie. |
 
-## Product catalogue endpoints
+---
 
-| Method | Route | Authentication | Purpose |
+## 2. User & Admin Endpoints
+
+| Method | Route | Auth | Purpose |
 | --- | --- | --- | --- |
-| `GET` | `/products` | Public | Page/search active products. Query: `q`, `sellerId`, `inStock`, `page`, `size`, `sort`. |
-| `GET` | `/products/{id}` | Public | Read an active product. |
-| `GET` | `/products/{id}/thumbnail` | Public | Stream the validated product thumbnail. |
-| `POST` | `/seller/products` | `SELLER` | Create a product owned by the current seller. Supports multipart product JSON plus optional image. |
-| `GET` | `/seller/products` | `SELLER` | Page only the current seller's products, including inactive products. |
-| `PATCH` | `/seller/products/{id}` | Owning `SELLER` | Partially update product text, price, stock, or image. |
-| `PATCH` | `/seller/products/{id}/stock` | Owning `SELLER` | Restock or set stock with an inventory reason. |
-| `DELETE` | `/seller/products/{id}` | Owning `SELLER` | Deactivate, rather than erase, a product. |
-| `PATCH` | `/admin/products/{id}` | `ADMIN` | Cross-seller product moderation where needed. |
+| `GET` | `/users/me` | Authenticated | Read currently authenticated user's profile. |
+| `PATCH` | `/users/me` | Authenticated | Update display name. |
+| `PUT` | `/admin/users/{id}/roles` | `ADMIN` | Update roles for a specific user (`CUSTOMER`, `SELLER`, `ADMIN`). |
 
-For backwards compatibility, the old `/items` and `/usercart` routes are not
-left enabled: unauthenticated, ID-in-request routes are a security flaw. API
-clients must use this contract.
+---
 
-## Cart and order endpoints
+## 3. Product Catalog Endpoints
 
-| Method | Route | Authentication | Purpose |
+| Method | Route | Auth | Purpose |
 | --- | --- | --- | --- |
-| `GET` | `/cart` | `CUSTOMER` | Read the current customer's cart and computed total. |
-| `POST` | `/cart/items` | `CUSTOMER` | Add `{ productId, quantity }`; combines the line if it already exists. |
-| `PATCH` | `/cart/items/{cartItemId}` | Owning `CUSTOMER` | Set a positive quantity after stock validation. |
-| `DELETE` | `/cart/items/{cartItemId}` | Owning `CUSTOMER` | Remove a cart line. |
-| `POST` | `/cart/checkout` | `CUSTOMER` | Create an order, decrement stock atomically, clear the cart, return confirmation. |
-| `GET` | `/orders` | `CUSTOMER` | Page the current customer's order history. |
-| `GET` | `/orders/{id}` | Owning `CUSTOMER` or `ADMIN` | Read one order. |
+| `GET` | `/products` | Public | Page active products (`page`, `size`). |
+| `GET` | `/products/{id}` | Public | Read single active product. |
+| `GET` | `/products/{id}/thumbnail` | Public | Stream binary thumbnail image from MongoDB GridFS. |
+| `POST` | `/seller/products` | `SELLER` | Create product with optional multipart image upload. |
+| `PATCH` | `/seller/products/{id}` | Owning `SELLER` | Update product SKU, name, description, price, or stock. |
+| `PATCH` | `/seller/products/{id}/stock` | Owning `SELLER` | Update stock level with inventory reason. |
+| `DELETE` | `/seller/products/{id}` | Owning `SELLER` | Deactivate product (soft-delete). |
 
-## Important response semantics
+---
 
-- A product whose stock is zero remains viewable (unless inactive) and returns
-  `inStock: false`; cart and checkout return `409 INSUFFICIENT_STOCK`.
-- Checkout does not reserve stock while an item merely sits in a cart.
-- Product lookup and cart operations use immutable product IDs, never names.
-- Monetary fields use decimal JSON values and are represented by `BigDecimal`
-  in Java/PostgreSQL.
-- A `DELETE` product request only deactivates a product. Cart additions for an
-  inactive product fail; existing historical order lines remain intact.
+## 4. Cart & Order Endpoints
+
+| Method | Route | Auth | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/cart` | `CUSTOMER` | Read current cart and calculated total. |
+| `POST` | `/cart/items` | `CUSTOMER` | Add item to cart with stock validation. |
+| `PATCH` | `/cart/items/{cartItemId}` | Owning `CUSTOMER` | Update cart item quantity with stock validation. |
+| `DELETE` | `/cart/items/{cartItemId}` | Owning `CUSTOMER` | Remove item line from cart. |
+| `POST` | `/cart/checkout` | `CUSTOMER` | Concurrency-safe atomic checkout (pessimistic lock, stock decrement, receipt). |
+| `GET` | `/orders` | `CUSTOMER` | Page current customer's order history. |
+| `GET` | `/orders/{id}` | Owning `CUSTOMER` / `ADMIN` | Read single order receipt. |
