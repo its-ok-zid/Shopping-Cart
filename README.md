@@ -30,6 +30,10 @@ The repository's default branch, `backend`, contains the service. The project is
 
 ## Architecture
 
+### Current Implementation
+
+The current `backend` branch is a containerized Spring Boot service with clear separation between API, business logic, relational persistence, and media storage.
+
 ```mermaid
 flowchart LR
     Client["Web or API client"] --> API["Shopping Cart API<br/>Spring Boot · Java 21"]
@@ -48,6 +52,115 @@ flowchart LR
     Compose -. runs .-> Mongo
 ```
 
+### Target Production Architecture
+
+The following architecture represents the **target evolution of this project** toward a production-oriented, independently scalable microservices platform. It is intentionally documented separately from the current implementation so the README does not imply that every component below is already deployed in the repository.
+
+```mermaid
+flowchart TB
+    %% STYLING DEFINITIONS
+    classDef client fill:#E1F5FE,stroke:#0288D1,stroke-width:2px,color:#01579B;
+    classDef gateway fill:#EDE7F6,stroke:#512DA8,stroke-width:2px,color:#311B92;
+    classDef service fill:#E8F5E9,stroke:#388E3C,stroke-width:2px,color:#1B5E20;
+    classDef cache fill:#FFF3E0,stroke:#F57C00,stroke-width:2px,color:#E65100;
+    classDef database fill:#ECEFF1,stroke:#455A64,stroke-width:2px,color:#263238;
+    classDef broker fill:#FCE4EC,stroke:#C2185B,stroke-width:2px,color:#880E4F;
+
+    %% CLIENT LAYER
+    subgraph CLIENT_LAYER["1. CLIENT TIER (Omnichannel)"]
+        WEB["Web Application (React / Next.js)"]:::client
+        MOBILE["Mobile App (iOS / Android)"]:::client
+        POSTMAN["External Partners / API Consumers"]:::client
+    end
+
+    %% EDGE & GATEWAY LAYER
+    subgraph EDGE_LAYER["2. EDGE ROUTING & SECURITY GATEWAY (Port 8080)"]
+        GW["API Gateway Engine"]:::gateway
+        RL["Redis Token-Bucket Rate Limiter"]:::cache
+        AUTH_GUARD["Edge Security & JWT Token Validator"]:::gateway
+    end
+
+    %% MICROSERVICES & RESILIENCE
+    subgraph CORE_SERVICES["3. BUSINESS SERVICES DOMAIN"]
+        subgraph AUTH_SERVICE_CONTAINER["Authentication Microservice (Port 8082)"]
+            CB_AUTH["Resilience4j Circuit Breaker"]:::gateway
+            AUTH_SVC["Auth Service Engine"]:::service
+        end
+
+        subgraph PROD_SERVICE_CONTAINER["Product Catalog Microservice (Port 8081)"]
+            CB_PROD["Resilience4j Circuit Breaker"]:::gateway
+            PROD_SVC["Product Service Engine"]:::service
+        end
+
+        subgraph CART_SERVICE_CONTAINER["Cart & Order Microservice (Port 8083)"]
+            CB_CART["Resilience4j Circuit Breaker"]:::gateway
+            CART_SVC["Cart & Order Service Engine"]:::service
+        end
+    end
+
+    %% CACHE & ASYNC BROKER
+    subgraph ACCELERATION_TIER["4. IN-MEMORY CACHE & EVENT BROKER"]
+        REDIS_CACHE["Redis Distributed Cache (L2)"]:::cache
+        EVENT_BUS["Event Message Broker (Redis Streams / Pub-Sub)"]:::broker
+        WS_SERVER["WebSocket Real-Time Notification Gateway"]:::broker
+    end
+
+    %% DATA PERSISTENCE LAYER
+    subgraph STORAGE_TIER["5. DATA PERSISTENCE LAYER"]
+        AUTH_DB[("PostgreSQL\n(Auth & Identity DB)")]:::database
+        PROD_DB[("PostgreSQL\n(Product Catalog DB)")]:::database
+        GRIDFS_DB[("MongoDB Atlas\n(GridFS Media Store)")]:::database
+        CART_DB[("PostgreSQL\n(Cart & Orders DB)")]:::database
+    end
+
+    %% CLIENT TO EDGE CONNECTIONS
+    WEB --> GW
+    MOBILE --> GW
+    POSTMAN --> GW
+
+    %% GATEWAY INTERNAL FLOW
+    GW --> RL
+    RL --> AUTH_GUARD
+
+    %% GATEWAY TO SERVICE ROUTING
+    AUTH_GUARD -->|/api/v1/auth/**| CB_AUTH --> AUTH_SVC
+    AUTH_GUARD -->|/api/v1/products/**| CB_PROD --> PROD_SVC
+    AUTH_GUARD -->|/api/v1/cart/**| CB_CART --> CART_SVC
+
+    %% AUTH SERVICE DATA FLOW
+    AUTH_SVC --> AUTH_DB
+
+    %% PRODUCT SERVICE DATA FLOW
+    PROD_SVC <-->|Cache Aside Pattern| REDIS_CACHE
+    PROD_SVC -->|Structured Data| PROD_DB
+    PROD_SVC -->|Binary Image Chunks| GRIDFS_DB
+
+    %% CART SERVICE INTERACTIONS
+    CART_SVC --> CART_DB
+    CART_SVC -.->|Verify Pricing/Stock| CB_PROD
+    CART_SVC -->|Publish Order Events| EVENT_BUS
+
+    %% ASYNC EVENT CONSUMPTION
+    EVENT_BUS -->|Trigger Stock Decrement| PROD_SVC
+    EVENT_BUS -->|Push Out-of-Stock Alert| WS_SERVER
+    WS_SERVER -.->|Real-Time Push| WEB
+```
+
+### Architecture Goals
+
+| Concern | Target approach |
+| --- | --- |
+| Edge routing | API Gateway with centralized routing and security |
+| Authentication | Dedicated authentication service with JWT validation |
+| Resilience | Resilience4j circuit breakers around service dependencies |
+| Rate limiting | Redis-backed token-bucket rate limiter |
+| Catalog performance | Redis cache-aside strategy |
+| Media storage | MongoDB Atlas GridFS |
+| Service isolation | Separate PostgreSQL databases per bounded context |
+| Async processing | Redis Streams / Pub-Sub for domain events |
+| Real-time updates | WebSocket notification gateway |
+| Scalability | Independently deployable and horizontally scalable services |
+
 ## Tech Stack
 
 | Area | Technology |
@@ -59,6 +172,7 @@ flowchart LR
 | API quality | Bean Validation, Springdoc OpenAPI / Swagger |
 | Build & local delivery | Maven Wrapper, Docker, Docker Compose |
 | Code ergonomics | Lombok |
+| Target architecture | Spring Cloud / API Gateway, Redis, Resilience4j, Redis Streams / Pub-Sub |
 
 ## Run Locally
 
@@ -150,7 +264,7 @@ The project includes application, controller, repository, and service-layer test
 
 ## Project Scope
 
-This repository currently focuses on the backend service. A production deployment would be strengthened by adding an authenticated user flow, authorization rules around catalog and cart operations, a client application, and checkout/payment integration.
+This repository currently focuses on the backend service. The target architecture above describes the planned evolution toward independently deployable authentication, product, and cart/order services with centralized gateway security, distributed caching, resilience patterns, and asynchronous events.
 
 ## Repository Structure
 
@@ -172,13 +286,29 @@ docker-compose.yml
 pom.xml
 ```
 
-## Next Improvements
+## Roadmap
 
-- Add authenticated user registration and authorization around cart ownership.
-- Add pagination, filtering, and stock reservation for catalog workflows.
-- Expand automated test coverage and add API contract tests.
-- Add CI checks and deployment configuration.
-- Pair the API with a production-ready frontend and checkout flow.
+### Current
+
+- [x] Catalog CRUD workflows
+- [x] Cart workflows
+- [x] PostgreSQL persistence
+- [x] MongoDB GridFS thumbnail storage
+- [x] Docker Compose environment
+- [x] Validation and centralized exception handling
+- [x] Automated tests
+
+### Next
+
+- [ ] Dedicated authentication microservice
+- [ ] API Gateway and centralized JWT validation
+- [ ] Redis distributed caching and rate limiting
+- [ ] Resilience4j circuit breakers
+- [ ] Product / Cart / Order service separation
+- [ ] Redis Streams / Pub-Sub domain events
+- [ ] Stock reservation and asynchronous inventory updates
+- [ ] WebSocket real-time notifications
+- [ ] CI/CD and cloud deployment
 
 ---
 
