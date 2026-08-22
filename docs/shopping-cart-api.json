@@ -1,0 +1,304 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Shopping Cart API",
+    "description": "Modular Monolith E-Commerce API (Phase 1). Includes Auth, Catalog, Cart, and Checkout.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:9081",
+      "description": "Local Development Server"
+    }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Authentication and Registration" },
+    { "name": "Admin", "description": "RBAC and User Management" },
+    { "name": "Products (Public)", "description": "Public Catalog Browsing" },
+    { "name": "Products (Seller)", "description": "Seller Inventory Management" },
+    { "name": "Cart & Checkout", "description": "Customer Cart Operations" }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a new Customer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User registered successfully" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Authenticate user and get JWT",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful. Returns Access Token and sets HttpOnly Refresh Token cookie."
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh Access Token",
+        "parameters": [
+          {
+            "name": "shopping_refresh",
+            "in": "cookie",
+            "schema": { "type": "string" },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": { "description": "Token refreshed successfully" }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Revoke session and clear cookies",
+        "responses": {
+          "200": { "description": "Logged out successfully" }
+        }
+      }
+    },
+    "/api/admin/users/{id}/roles": {
+      "put": {
+        "tags": ["Admin"],
+        "summary": "Update User Roles (Requires ADMIN)",
+        "security": [ { "BearerAuth": [] } ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RoleUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User roles updated successfully" }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "tags": ["Products (Public)"],
+        "summary": "Get all active products (Paged)",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 0 } },
+          { "name": "size", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "Products fetched successfully" }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "tags": ["Products (Public)"],
+        "summary": "Get a specific product by ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Product fetched successfully" }
+        }
+      }
+    },
+    "/api/products/{id}/thumbnail": {
+      "get": {
+        "tags": ["Products (Public)"],
+        "summary": "Stream product thumbnail image",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image binary stream",
+            "content": {
+              "image/jpeg": { "schema": { "type": "string", "format": "binary" } },
+              "image/png": { "schema": { "type": "string", "format": "binary" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/seller/products": {
+      "post": {
+        "tags": ["Products (Seller)"],
+        "summary": "Create a new product (Requires SELLER)",
+        "security": [ { "BearerAuth": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "product": { "$ref": "#/components/schemas/CreateProductRequest" },
+                  "thumbnail": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Product created successfully" }
+        }
+      }
+    },
+    "/api/cart": {
+      "get": {
+        "tags": ["Cart & Checkout"],
+        "summary": "Get current customer's cart",
+        "security": [ { "BearerAuth": [] } ],
+        "responses": {
+          "200": { "description": "Cart fetched successfully" }
+        }
+      }
+    },
+    "/api/cart/items": {
+      "post": {
+        "tags": ["Cart & Checkout"],
+        "summary": "Add item to cart",
+        "security": [ { "BearerAuth": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AddCartItemRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Item added to cart" }
+        }
+      }
+    },
+    "/api/cart/items/{cartItemId}": {
+      "patch": {
+        "tags": ["Cart & Checkout"],
+        "summary": "Update cart item quantity",
+        "security": [ { "BearerAuth": [] } ],
+        "parameters": [
+          { "name": "cartItemId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateCartItemRequest" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cart updated" }
+        }
+      },
+      "delete": {
+        "tags": ["Cart & Checkout"],
+        "summary": "Remove item from cart",
+        "security": [ { "BearerAuth": [] } ],
+        "parameters": [
+          { "name": "cartItemId", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Item removed from cart" }
+        }
+      }
+    },
+    "/api/cart/checkout": {
+      "post": {
+        "tags": ["Cart & Checkout"],
+        "summary": "Checkout cart and create Order",
+        "security": [ { "BearerAuth": [] } ],
+        "responses": {
+          "200": { "description": "Order placed successfully" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "example": "zidan" },
+          "email": { "type": "string", "example": "zidan@example.com" },
+          "password": { "type": "string", "example": "SuperSecretPassword123" },
+          "displayName": { "type": "string", "example": "Zidan Ali" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "identifier": { "type": "string", "example": "zidan" },
+          "password": { "type": "string", "example": "SuperSecretPassword123" }
+        }
+      },
+      "RoleUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["CUSTOMER", "SELLER", "ADMIN"] },
+            "example": ["CUSTOMER", "SELLER"]
+          }
+        }
+      },
+      "CreateProductRequest": {
+        "type": "object",
+        "properties": {
+          "sku": { "type": "string", "example": "HEADPHONES-PRO-1" },
+          "name": { "type": "string", "example": "Pro Wireless Headphones" },
+          "description": { "type": "string", "example": "Noise-cancelling headphones." },
+          "price": { "type": "number", "format": "double", "example": 199.99 },
+          "stock": { "type": "integer", "example": 50 }
+        }
+      },
+      "AddCartItemRequest": {
+        "type": "object",
+        "properties": {
+          "productId": { "type": "integer", "example": 1 },
+          "quantity": { "type": "integer", "example": 2 }
+        }
+      },
+      "UpdateCartItemRequest": {
+        "type": "object",
+        "properties": {
+          "quantity": { "type": "integer", "example": 3 }
+        }
+      }
+    }
+  }
+}
